@@ -1,24 +1,60 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { AuthView } from "@/components/pantry/AuthView";
+import { Dashboard } from "@/components/pantry/Dashboard";
+import { loadUser, saveUser, type User } from "@/lib/pantry";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "EcoPantry — Track food, cut waste, cook smarter" },
+      {
+        name: "description",
+        content:
+          "EcoPantry tracks your groceries, flags what's expiring soon, scans receipts and turns leftovers into sustainable recipes.",
+      },
+      { property: "og:title", content: "EcoPantry — Track food, cut waste, cook smarter" },
+      {
+        property: "og:description",
+        content:
+          "Track your pantry, spot expiring food in time, and get AI recipes that use it up before it's wasted.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
 function Index() {
-  return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
+  const [user, setUser] = useState<User | null>(null);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    setUser(loadUser());
+    setReady(true);
+  }, []);
+
+  if (!ready) return <div className="min-h-screen bg-background" />;
+
+  if (!user) {
+    return (
+      <AuthView
+        onAuth={(u) => {
+          saveUser(u);
+          setUser(u);
+        }}
       />
-    </div>
+    );
+  }
+
+  return (
+    <Dashboard
+      user={user}
+      onSignOut={() => {
+        saveUser(null);
+        setUser(null);
+      }}
+    />
   );
 }
