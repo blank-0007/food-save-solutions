@@ -174,7 +174,7 @@ export function generateRecipe(item: FoodItem): Recipe {
   return {
     title,
     prepTime: `${15 + Math.floor(Math.random() * 20)} min`,
-    difficulty: ["Easy", "Easy", "Medium"][Math.floor(Math.random() * 3)],
+    difficulty: Math.random() < 0.66 ? "Easy" : "Medium",
     servings: `${2 + Math.floor(Math.random() * 3)} servings`,
     description: `A sustainable, waste-busting dish built around your ${item.name.toLowerCase()} before it goes off. Everything else is likely already in your kitchen.`,
     ingredients: [
