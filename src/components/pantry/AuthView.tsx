@@ -52,7 +52,10 @@ export function AuthView({ onAuth }: { onAuth: (user: User) => void }) {
                 onSubmit={(e) => {
                   e.preventDefault();
                   if (!valid(loginEmail, loginPassword)) return;
-                  onAuth({ name: loginEmail.split("@")[0], email: loginEmail.trim() });
+                  onAuth({
+                    name: loginEmail.trim().split("@")[0] ?? "friend",
+                    email: loginEmail.trim(),
+                  });
                 }}
               >
                 <div className="space-y-2">
