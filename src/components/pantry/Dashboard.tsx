@@ -121,6 +121,19 @@ export function Dashboard({ user, onSignOut }: { user: User; onSignOut: () => vo
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              className="relative h-10 w-10 p-0"
+              onClick={() => setRemindersOpen(true)}
+              aria-label="Expiry reminders"
+            >
+              {reminders.enabled ? <BellRing className="h-5 w-5" /> : <Bell className="h-5 w-5" />}
+              {dueCount > 0 && (
+                <span className="absolute right-1 top-1 grid h-4 min-w-4 place-items-center rounded-full bg-danger px-1 text-[10px] font-semibold text-danger-foreground">
+                  {dueCount}
+                </span>
+              )}
+            </Button>
             <Button className="hidden h-10 md:inline-flex" onClick={() => setAddOpen(true)}>
               <Plus className="h-4 w-4" /> Add item
             </Button>
@@ -187,6 +200,7 @@ export function Dashboard({ user, onSignOut }: { user: User; onSignOut: () => vo
                   toast.success("Item removed from your pantry.");
                 }}
                 onRecipe={setRecipeItem}
+                onEdit={setEditItem}
               />
             ))}
           </section>
@@ -212,6 +226,18 @@ export function Dashboard({ user, onSignOut }: { user: User; onSignOut: () => vo
         open={addOpen}
         onOpenChange={setAddOpen}
         onAdd={(newItems) => update([...newItems, ...items])}
+      />
+      <EditItemDialog
+        item={editItem}
+        onOpenChange={(o) => !o && setEditItem(null)}
+        onSave={(updated) => update(items.map((i) => (i.id === updated.id ? updated : i)))}
+      />
+      <ReminderDialog
+        open={remindersOpen}
+        onOpenChange={setRemindersOpen}
+        settings={reminders}
+        onChange={updateReminders}
+        items={items}
       />
       <RecipeDialog item={recipeItem} onOpenChange={(o) => !o && setRecipeItem(null)} />
     </div>
