@@ -14,7 +14,200 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      alert_log: {
+        Row: {
+          alert_type: string
+          created_at: string
+          id: string
+          item_id: string | null
+          sent_on: string
+          user_id: string
+        }
+        Insert: {
+          alert_type?: string
+          created_at?: string
+          id?: string
+          item_id?: string | null
+          sent_on?: string
+          user_id: string
+        }
+        Update: {
+          alert_type?: string
+          created_at?: string
+          id?: string
+          item_id?: string | null
+          sent_on?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alert_log_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "pantry_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pantry_items: {
+        Row: {
+          category: string
+          created_at: string
+          expiry_date: string
+          id: string
+          name: string
+          price: number | null
+          purchase_date: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          expiry_date: string
+          id?: string
+          name: string
+          price?: number | null
+          purchase_date?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          expiry_date?: string
+          id?: string
+          name?: string
+          price?: number | null
+          purchase_date?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          email: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      reminder_settings: {
+        Row: {
+          email_alerts: boolean
+          enabled: boolean
+          expiry_day_alerts: boolean
+          lead_days: number
+          monthly_waste_goal: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          email_alerts?: boolean
+          enabled?: boolean
+          expiry_day_alerts?: boolean
+          lead_days?: number
+          monthly_waste_goal?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          email_alerts?: boolean
+          enabled?: boolean
+          expiry_day_alerts?: boolean
+          lead_days?: number
+          monthly_waste_goal?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      shopping_list_items: {
+        Row: {
+          category: string
+          checked: boolean
+          created_at: string
+          id: string
+          name: string
+          note: string | null
+          source: string
+          user_id: string
+        }
+        Insert: {
+          category?: string
+          checked?: boolean
+          created_at?: string
+          id?: string
+          name: string
+          note?: string | null
+          source?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          checked?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+          note?: string | null
+          source?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      waste_log: {
+        Row: {
+          category: string
+          created_at: string
+          estimated_value: number
+          id: string
+          name: string
+          quantity: number
+          reason: string
+          user_id: string
+          wasted_on: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          estimated_value?: number
+          id?: string
+          name: string
+          quantity?: number
+          reason?: string
+          user_id: string
+          wasted_on?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          estimated_value?: number
+          id?: string
+          name?: string
+          quantity?: number
+          reason?: string
+          user_id?: string
+          wasted_on?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
