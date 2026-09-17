@@ -1,6 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
+  Bell,
+  BellRing,
   Clock,
   Leaf,
   LogOut,
@@ -15,8 +17,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { AddItemDialog } from "./AddItemDialog";
+import { EditItemDialog } from "./EditItemDialog";
 import { ItemCard } from "./ItemCard";
 import { RecipeDialog } from "./RecipeDialog";
+import { ReminderDialog } from "./ReminderDialog";
 import {
   CATEGORIES,
   loadItems,
@@ -25,6 +29,14 @@ import {
   type FoodItem,
   type User,
 } from "@/lib/pantry";
+import {
+  DEFAULT_REMINDERS,
+  dueItems,
+  loadReminders,
+  runReminderCheck,
+  saveReminders,
+  type ReminderSettings,
+} from "@/lib/reminders";
 
 const FILTERS = ["All", ...CATEGORIES] as const;
 type Filter = (typeof FILTERS)[number];
@@ -35,14 +47,37 @@ export function Dashboard({ user, onSignOut }: { user: User; onSignOut: () => vo
   const [filter, setFilter] = useState<Filter>("All");
   const [addOpen, setAddOpen] = useState(false);
   const [recipeItem, setRecipeItem] = useState<FoodItem | null>(null);
+  const [editItem, setEditItem] = useState<FoodItem | null>(null);
+  const [remindersOpen, setRemindersOpen] = useState(false);
+  const [reminders, setReminders] = useState<ReminderSettings>(DEFAULT_REMINDERS);
+  const loaded = useRef(false);
 
   useEffect(() => {
     setItems(loadItems(user.email));
+    setReminders(loadReminders(user.email));
+    loaded.current = true;
   }, [user.email]);
+
+  // Check for expiring food on load, then hourly while the app stays open.
+  useEffect(() => {
+    if (!loaded.current || !reminders.enabled) return;
+    const check = () => runReminderCheck(user.email, items, reminders, (m) => toast.warning(m));
+    const t = setTimeout(check, 800);
+    const interval = setInterval(check, 60 * 60 * 1000);
+    return () => {
+      clearTimeout(t);
+      clearInterval(interval);
+    };
+  }, [user.email, items, reminders]);
 
   function update(next: FoodItem[]) {
     setItems(next);
     saveItems(user.email, next);
+  }
+
+  function updateReminders(next: ReminderSettings) {
+    setReminders(next);
+    saveReminders(user.email, next);
   }
 
   const stats = useMemo(() => {
