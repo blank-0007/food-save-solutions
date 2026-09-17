@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Plus, Upload, Sparkles, Loader2, ScanLine } from "lucide-react";
+import { Plus, Upload, Sparkles, Loader2, ScanLine, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -111,10 +111,27 @@ export function AddItemDialog({ open, onOpenChange, onAdd }: Props) {
     startScan(file);
   }
 
+  function updateScanned(id: string, patch: Partial<FoodItem>) {
+    setScanned((prev) => prev?.map((s) => (s.id === id ? { ...s, ...patch } : s)) ?? prev);
+  }
+
+  function removeScanned(id: string) {
+    setScanned((prev) => prev?.filter((s) => s.id !== id) ?? prev);
+  }
+
   function importScanned() {
     if (!scanned?.length) return;
-    onAdd(scanned);
-    toast.success(`${scanned.length} items imported to your pantry.`);
+    const cleaned = scanned.map((s) => ({ ...s, name: s.name.trim() }));
+    if (cleaned.some((s) => !s.name)) {
+      toast.error("Every item needs a name before importing.");
+      return;
+    }
+    if (cleaned.some((s) => s.expiryDate < s.purchaseDate)) {
+      toast.error("An expiry date is before its purchase date. Please fix it first.");
+      return;
+    }
+    onAdd(cleaned);
+    toast.success(`${cleaned.length} items imported to your pantry.`);
     close();
   }
 

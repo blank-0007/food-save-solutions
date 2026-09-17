@@ -1,4 +1,4 @@
-import { Trash2, ChefHat, CalendarDays, ShoppingBasket } from "lucide-react";
+import { Trash2, ChefHat, CalendarDays, ShoppingBasket, Pencil } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { StatusPill } from "./StatusPill";
@@ -8,10 +8,12 @@ export function ItemCard({
   item,
   onDelete,
   onRecipe,
+  onEdit,
 }: {
   item: FoodItem;
   onDelete: (id: string) => void;
   onRecipe: (item: FoodItem) => void;
+  onEdit: (item: FoodItem) => void;
 }) {
   return (
     <article className="surface-card flex flex-col gap-4 p-5">
@@ -44,18 +46,28 @@ export function ItemCard({
         </div>
       </dl>
 
-      <div className="mt-auto flex flex-col gap-2 sm:flex-row">
-        <Button className="h-11 flex-1" onClick={() => onRecipe(item)}>
+      <div className="mt-auto space-y-2">
+        <Button className="h-11 w-full" onClick={() => onRecipe(item)}>
           <ChefHat className="h-4 w-4" /> Generate Recipe
         </Button>
-        <Button
-          variant="outline"
-          className="h-11 flex-1 text-destructive hover:bg-destructive/10 sm:flex-none"
-          onClick={() => onDelete(item.id)}
-          aria-label={`Delete ${item.name}`}
-        >
-          <Trash2 className="h-4 w-4" /> Delete
-        </Button>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Button
+            variant="outline"
+            className="h-11 flex-1"
+            onClick={() => onEdit(item)}
+            aria-label={`Edit ${item.name}`}
+          >
+            <Pencil className="h-4 w-4" /> Edit
+          </Button>
+          <Button
+            variant="outline"
+            className="h-11 flex-1 text-destructive hover:bg-destructive/10"
+            onClick={() => onDelete(item.id)}
+            aria-label={`Delete ${item.name}`}
+          >
+            <Trash2 className="h-4 w-4" /> Delete
+          </Button>
+        </div>
       </div>
     </article>
   );
