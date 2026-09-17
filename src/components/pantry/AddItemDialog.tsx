@@ -239,29 +239,107 @@ export function AddItemDialog({ open, onOpenChange, onAdd }: Props) {
 
             {scanned && !scanning && (
               <div className="space-y-3">
-                <p className="flex items-center gap-2 text-sm font-semibold">
-                  <Sparkles className="h-4 w-4 text-primary" /> {scanned.length} items detected
+                <div className="flex items-center justify-between gap-2">
+                  <p className="flex items-center gap-2 text-sm font-semibold">
+                    <Sparkles className="h-4 w-4 text-primary" /> {scanned.length} items detected
+                  </p>
+                  <Badge variant="secondary" className="rounded-full">
+                    Review before importing
+                  </Badge>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Check each line — expiry dates are estimated, so adjust anything that looks off.
                 </p>
-                <ul className="space-y-2">
+                <ul className="space-y-3">
                   {scanned.map((s) => (
-                    <li
-                      key={s.id}
-                      className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-3"
-                    >
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium">{s.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          Expires {formatDate(s.expiryDate)}
-                        </p>
+                    <li key={s.id} className="space-y-3 rounded-xl border border-border bg-card p-3">
+                      <div className="flex items-start gap-2">
+                        <div className="flex-1 space-y-1.5">
+                          <Label htmlFor={`scan-name-${s.id}`} className="text-xs text-muted-foreground">
+                            Item name
+                          </Label>
+                          <Input
+                            id={`scan-name-${s.id}`}
+                            className="h-10"
+                            value={s.name}
+                            onChange={(e) => updateScanned(s.id, { name: e.target.value })}
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          className="mt-6 h-10 w-10 shrink-0 p-0 text-destructive hover:bg-destructive/10"
+                          onClick={() => removeScanned(s.id)}
+                          aria-label={`Remove ${s.name}`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
-                      <Badge variant="secondary" className="rounded-full">
-                        {s.category}
-                      </Badge>
+                      <div className="space-y-1.5">
+                        <Label htmlFor={`scan-cat-${s.id}`} className="text-xs text-muted-foreground">
+                          Category
+                        </Label>
+                        <Select
+                          value={s.category}
+                          onValueChange={(v) => updateScanned(s.id, { category: v as Category })}
+                        >
+                          <SelectTrigger id={`scan-cat-${s.id}`} className="h-10 w-full">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {CATEGORIES.map((c) => (
+                              <SelectItem key={c} value={c}>
+                                {c}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <div className="space-y-1.5">
+                          <Label
+                            htmlFor={`scan-bought-${s.id}`}
+                            className="text-xs text-muted-foreground"
+                          >
+                            Purchase date
+                          </Label>
+                          <Input
+                            id={`scan-bought-${s.id}`}
+                            type="date"
+                            className="h-10"
+                            value={s.purchaseDate}
+                            onChange={(e) => updateScanned(s.id, { purchaseDate: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label
+                            htmlFor={`scan-expiry-${s.id}`}
+                            className="text-xs text-muted-foreground"
+                          >
+                            Expiry date
+                          </Label>
+                          <Input
+                            id={`scan-expiry-${s.id}`}
+                            type="date"
+                            className="h-10"
+                            value={s.expiryDate}
+                            onChange={(e) => updateScanned(s.id, { expiryDate: e.target.value })}
+                          />
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Expires {formatDate(s.expiryDate)}
+                      </p>
                     </li>
                   ))}
                 </ul>
-                <Button className="h-11 w-full" onClick={importScanned}>
-                  <ScanLine className="h-4 w-4" /> Import to pantry
+                <Button
+                  className="h-11 w-full"
+                  onClick={importScanned}
+                  disabled={scanned.length === 0}
+                >
+                  <ScanLine className="h-4 w-4" />{" "}
+                  {scanned.length ? `Import ${scanned.length} items to pantry` : "Nothing to import"}
                 </Button>
               </div>
             )}
