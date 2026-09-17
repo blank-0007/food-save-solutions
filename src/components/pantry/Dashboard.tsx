@@ -1,6 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
+  Bell,
+  BellRing,
   Clock,
   Leaf,
   LogOut,
@@ -15,8 +17,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { AddItemDialog } from "./AddItemDialog";
+import { EditItemDialog } from "./EditItemDialog";
 import { ItemCard } from "./ItemCard";
 import { RecipeDialog } from "./RecipeDialog";
+import { ReminderDialog } from "./ReminderDialog";
 import {
   CATEGORIES,
   loadItems,
@@ -25,6 +29,14 @@ import {
   type FoodItem,
   type User,
 } from "@/lib/pantry";
+import {
+  DEFAULT_REMINDERS,
+  dueItems,
+  loadReminders,
+  runReminderCheck,
+  saveReminders,
+  type ReminderSettings,
+} from "@/lib/reminders";
 
 const FILTERS = ["All", ...CATEGORIES] as const;
 type Filter = (typeof FILTERS)[number];
@@ -35,14 +47,37 @@ export function Dashboard({ user, onSignOut }: { user: User; onSignOut: () => vo
   const [filter, setFilter] = useState<Filter>("All");
   const [addOpen, setAddOpen] = useState(false);
   const [recipeItem, setRecipeItem] = useState<FoodItem | null>(null);
+  const [editItem, setEditItem] = useState<FoodItem | null>(null);
+  const [remindersOpen, setRemindersOpen] = useState(false);
+  const [reminders, setReminders] = useState<ReminderSettings>(DEFAULT_REMINDERS);
+  const loaded = useRef(false);
 
   useEffect(() => {
     setItems(loadItems(user.email));
+    setReminders(loadReminders(user.email));
+    loaded.current = true;
   }, [user.email]);
+
+  // Check for expiring food on load, then hourly while the app stays open.
+  useEffect(() => {
+    if (!loaded.current || !reminders.enabled) return;
+    const check = () => runReminderCheck(user.email, items, reminders, (m) => toast.warning(m));
+    const t = setTimeout(check, 800);
+    const interval = setInterval(check, 60 * 60 * 1000);
+    return () => {
+      clearTimeout(t);
+      clearInterval(interval);
+    };
+  }, [user.email, items, reminders]);
 
   function update(next: FoodItem[]) {
     setItems(next);
     saveItems(user.email, next);
+  }
+
+  function updateReminders(next: ReminderSettings) {
+    setReminders(next);
+    saveReminders(user.email, next);
   }
 
   const stats = useMemo(() => {
@@ -63,6 +98,11 @@ export function Dashboard({ user, onSignOut }: { user: User; onSignOut: () => vo
       .filter((i) => (q ? i.name.toLowerCase().includes(q) : true))
       .sort((a, b) => a.expiryDate.localeCompare(b.expiryDate));
   }, [items, query, filter]);
+
+  const dueCount = useMemo(
+    () => dueItems(items, reminders.leadDays).length,
+    [items, reminders.leadDays],
+  );
 
   const statCards = [
     { label: "Items in pantry", value: stats.total, Icon: Package, tone: "bg-secondary text-secondary-foreground" },
@@ -86,6 +126,19 @@ export function Dashboard({ user, onSignOut }: { user: User; onSignOut: () => vo
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              className="relative h-10 w-10 p-0"
+              onClick={() => setRemindersOpen(true)}
+              aria-label="Expiry reminders"
+            >
+              {reminders.enabled ? <BellRing className="h-5 w-5" /> : <Bell className="h-5 w-5" />}
+              {dueCount > 0 && (
+                <span className="absolute right-1 top-1 grid h-4 min-w-4 place-items-center rounded-full bg-danger px-1 text-[10px] font-semibold text-danger-foreground">
+                  {dueCount}
+                </span>
+              )}
+            </Button>
             <Button className="hidden h-10 md:inline-flex" onClick={() => setAddOpen(true)}>
               <Plus className="h-4 w-4" /> Add item
             </Button>
@@ -152,6 +205,7 @@ export function Dashboard({ user, onSignOut }: { user: User; onSignOut: () => vo
                   toast.success("Item removed from your pantry.");
                 }}
                 onRecipe={setRecipeItem}
+                onEdit={setEditItem}
               />
             ))}
           </section>
@@ -177,6 +231,18 @@ export function Dashboard({ user, onSignOut }: { user: User; onSignOut: () => vo
         open={addOpen}
         onOpenChange={setAddOpen}
         onAdd={(newItems) => update([...newItems, ...items])}
+      />
+      <EditItemDialog
+        item={editItem}
+        onOpenChange={(o) => !o && setEditItem(null)}
+        onSave={(updated) => update(items.map((i) => (i.id === updated.id ? updated : i)))}
+      />
+      <ReminderDialog
+        open={remindersOpen}
+        onOpenChange={setRemindersOpen}
+        settings={reminders}
+        onChange={updateReminders}
+        items={items}
       />
       <RecipeDialog item={recipeItem} onOpenChange={(o) => !o && setRecipeItem(null)} />
     </div>
