@@ -99,6 +99,11 @@ export function Dashboard({ user, onSignOut }: { user: User; onSignOut: () => vo
       .sort((a, b) => a.expiryDate.localeCompare(b.expiryDate));
   }, [items, query, filter]);
 
+  const dueCount = useMemo(
+    () => dueItems(items, reminders.leadDays).length,
+    [items, reminders.leadDays],
+  );
+
   const statCards = [
     { label: "Items in pantry", value: stats.total, Icon: Package, tone: "bg-secondary text-secondary-foreground" },
     { label: "Expiring in 3 days", value: stats.soon, Icon: Clock, tone: "bg-warn text-warn-foreground" },
