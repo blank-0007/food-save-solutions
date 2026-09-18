@@ -79,7 +79,7 @@ export function AddItemDialog({ open, onOpenChange, onAdd }: Props) {
       toast.error("The expiry date can't be before the purchase date.");
       return;
     }
-    onAdd([{ id: uid(), name: name.trim(), category, purchaseDate, expiryDate }]);
+    onAdd([{ id: uid(), name: name.trim(), category, purchaseDate, expiryDate, price: null }]);
     toast.success(`${name.trim()} added to your pantry.`);
     close();
   }
