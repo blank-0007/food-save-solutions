@@ -118,3 +118,82 @@ export function generateRecipe(item: FoodItem): Recipe {
     ],
   };
 }
+
+/* ---------- Local (this-device) persistence & receipt demo ---------- */
+
+export type User = { name: string; email: string };
+
+const USER_KEY = "ecopantry.user";
+const itemsKey = (email: string) => `ecopantry.items.${email}`;
+
+export function loadUser(): User | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(USER_KEY);
+    return raw ? (JSON.parse(raw) as User) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveUser(user: User | null): void {
+  if (typeof window === "undefined") return;
+  if (user) window.localStorage.setItem(USER_KEY, JSON.stringify(user));
+  else window.localStorage.removeItem(USER_KEY);
+}
+
+const SEED: Omit<FoodItem, "id">[] = [
+  { name: "Spinach", category: "Produce", purchaseDate: addDays(todayISO(), -4), expiryDate: addDays(todayISO(), 1), price: 2.4 },
+  { name: "Greek Yogurt", category: "Dairy", purchaseDate: addDays(todayISO(), -6), expiryDate: addDays(todayISO(), 5), price: 3.9 },
+  { name: "Chicken Thighs", category: "Meat", purchaseDate: addDays(todayISO(), -3), expiryDate: addDays(todayISO(), -1), price: 7.5 },
+  { name: "Brown Rice", category: "Pantry", purchaseDate: addDays(todayISO(), -20), expiryDate: addDays(todayISO(), 150), price: 4.2 },
+  { name: "Orange Juice", category: "Beverages", purchaseDate: addDays(todayISO(), -2), expiryDate: addDays(todayISO(), 9), price: 3.1 },
+];
+
+export function loadItems(email: string): FoodItem[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(itemsKey(email));
+    if (raw) return JSON.parse(raw) as FoodItem[];
+  } catch {
+    /* fall through to seed */
+  }
+  const seeded = SEED.map((s) => ({ ...s, id: uid() }));
+  saveItems(email, seeded);
+  return seeded;
+}
+
+export function saveItems(email: string, items: FoodItem[]): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(itemsKey(email), JSON.stringify(items));
+}
+
+const RECEIPT_POOL: { name: string; category: Category; price: number }[] = [
+  { name: "Bananas", category: "Produce", price: 1.8 },
+  { name: "Whole Milk", category: "Dairy", price: 2.6 },
+  { name: "Cheddar Cheese", category: "Dairy", price: 4.5 },
+  { name: "Tomatoes", category: "Produce", price: 2.2 },
+  { name: "Chicken Breast", category: "Meat", price: 8.1 },
+  { name: "Pasta", category: "Pantry", price: 1.5 },
+  { name: "Olive Oil", category: "Pantry", price: 6.9 },
+  { name: "Sparkling Water", category: "Beverages", price: 2.0 },
+  { name: "Carrots", category: "Produce", price: 1.4 },
+  { name: "Minced Beef", category: "Meat", price: 7.3 },
+  { name: "Butter", category: "Dairy", price: 3.3 },
+  { name: "Orange Juice", category: "Beverages", price: 3.1 },
+];
+
+/** Demo receipt parsing used while the AI scanner is offline. */
+export function mockScanReceipt(): DraftItem[] {
+  const pool = [...RECEIPT_POOL].sort(() => Math.random() - 0.5);
+  const count = 4 + Math.floor(Math.random() * 3);
+  const purchaseDate = todayISO();
+  return pool.slice(0, count).map((p) => ({
+    id: uid(),
+    name: p.name,
+    category: p.category,
+    price: p.price,
+    purchaseDate,
+    expiryDate: addDays(purchaseDate, SHELF_LIFE[p.category]),
+  }));
+}
